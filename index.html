@@ -333,7 +333,7 @@
         <button class="secondary" type="button" id="githubUploadButton">開啟 GitHub 上傳圖片</button>
         <p class="note">
           固定要分享的節目卡片、保險資訊、財經資訊、新聞分享，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
-          上傳後重新整理頁面，就會自動讀取圖片。
+          上傳後重新整理頁面，就會自動讀取圖片。若圖片要連到文章或商品頁，請編輯 <span class="warning">image-links.json</span>。
         </p>
         <input id="photoInput" type="file" accept="image/png,image/jpeg" multiple>
         <p class="note">
@@ -352,6 +352,7 @@
     // 格式通常是：https://github.com/你的帳號/你的repo/upload/main/images
     const GITHUB_IMAGES_UPLOAD_URL = "https://github.com/tedbear0314-ops/line-card/upload/main/images";
     const GITHUB_IMAGES_API_URL = "https://api.github.com/repos/tedbear0314-ops/line-card/contents/images?ref=main";
+    const IMAGE_LINKS_URL = "image-links.json";
 
     // 手機臨時照片會直接上傳到 Cloudinary。
     // 請先到 Cloudinary 建立 unsigned upload preset，再填入 cloud name 與 preset 名稱。
@@ -376,6 +377,7 @@
     };
 
     const selected = new Map();
+    let imageLinks = {};
     const statusEl = document.querySelector("#status");
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
@@ -459,6 +461,17 @@
       return "program";
     }
 
+    async function loadImageLinks() {
+      try {
+        const response = await fetch(IMAGE_LINKS_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("讀不到圖片連結設定檔。");
+        imageLinks = await response.json();
+      } catch (error) {
+        console.warn(error);
+        imageLinks = {};
+      }
+    }
+
     function gcd(a, b) {
       return b === 0 ? a : gcd(b, a % b);
     }
@@ -496,7 +509,9 @@
             const aspectRatio = await getImageAspectRatio(file.download_url);
             imageGroups[category].push({
               id: `${category}-${file.sha}`,
+              fileName: file.name,
               url: file.download_url,
+              linkUrl: imageLinks[file.name] || "",
               aspectRatio
             });
           });
@@ -599,16 +614,26 @@
 
     function buildFlexBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
+      const hero = {
+        type: "image",
+        url: imageUrl,
+        size: "full",
+        aspectRatio: item.aspectRatio || "20:13",
+        aspectMode: "fit",
+        backgroundColor: "#FFFFFF"
+      };
+
+      if (item.linkUrl) {
+        hero.action = {
+          type: "uri",
+          label: "查看詳細內容",
+          uri: item.linkUrl
+        };
+      }
+
       return {
         type: "bubble",
-        hero: {
-          type: "image",
-          url: imageUrl,
-          size: "full",
-          aspectRatio: item.aspectRatio || "20:13",
-          aspectMode: "fit",
-          backgroundColor: "#FFFFFF"
-        }
+        hero
       };
     }
 
@@ -679,7 +704,7 @@
     renderGrid("insurance", "#insuranceGrid");
     renderGrid("finance", "#financeGrid");
     renderGrid("news", "#newsGrid");
-    loadGithubImages();
+    loadImageLinks().then(loadGithubImages);
     initLiff();
   </script>
 </body>
