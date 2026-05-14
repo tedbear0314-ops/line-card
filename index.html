@@ -532,6 +532,56 @@
       }
     }
 
+    function buildFlexBubble(item) {
+      const imageUrl = toAbsoluteUrl(item.url);
+      return {
+        type: "bubble",
+        hero: {
+          type: "image",
+          url: imageUrl,
+          size: "full",
+          aspectRatio: "20:13",
+          aspectMode: "cover",
+          action: {
+            type: "uri",
+            uri: imageUrl
+          }
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: [
+            {
+              type: "text",
+              text: item.title || "圖片卡片",
+              weight: "bold",
+              size: "md",
+              wrap: true
+            }
+          ]
+        }
+      };
+    }
+
+    function buildFlexMessages(items) {
+      const messages = [];
+
+      for (let i = 0; i < items.length; i += 12) {
+        const group = items.slice(i, i + 12);
+        messages.push({
+          type: "flex",
+          altText: "圖片卡片分享",
+          contents: {
+            type: "carousel",
+            contents: group.map(buildFlexBubble)
+          }
+        });
+      }
+
+      return messages;
+    }
+
     async function shareSelectedImages() {
       if (!liff.isLoggedIn()) {
         liff.login();
@@ -539,27 +589,22 @@
       }
 
       const items = Array.from(selected.values());
-      const messageObjects = items.map(item => {
-        const imageUrl = toAbsoluteUrl(item.url);
-        return {
-          type: "image",
-          originalContentUrl: imageUrl,
-          previewImageUrl: imageUrl
-        };
-      });
+      if (items.length > 60) {
+        alert("一次最多可分享 60 張，請少選幾張再試一次。");
+        return;
+      }
+
+      const messageObjects = buildFlexMessages(items);
 
       try {
         statusEl.textContent = "分享中";
-        for (let i = 0; i < messageObjects.length; i += 5) {
-          const group = messageObjects.slice(i, i + 5);
-          const result = await liff.shareTargetPicker(group, { isMultiple: true });
-          if (!result) break;
-        }
+        const result = await liff.shareTargetPicker(messageObjects, { isMultiple: true });
+        if (!result) statusEl.textContent = "已取消";
         statusEl.textContent = "已登入";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "分享錯誤";
-        alert("分享失敗，請確認 LINE Developers 已啟用 Share target picker。");
+        alert("分享失敗，請確認圖片網址可公開讀取，並確認 LINE Developers 已啟用 Share target picker。");
       }
     }
 
