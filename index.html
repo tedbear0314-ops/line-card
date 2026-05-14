@@ -4,97 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>TED 雙專業發送器</title>
+    <title>TED 專業功能控制台</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
-        .container { text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 280px; }
-        button { width: 100%; padding: 16px; font-size: 18px; font-weight: bold; background-color: #06C755; color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(6,199,85,0.3); }
-        .hint { margin-top: 20px; font-size: 13px; color: #888; }
+        body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        h2 { color: #2c3e50; font-size: 1.3rem; margin-bottom: 20px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        button { width: 100%; padding: 15px; font-size: 1rem; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .btn-card { background: #06C755; box-shadow: 0 4px 10px rgba(6,199,85,0.3); }
+        .btn-festive { background: #ff7675; box-shadow: 0 4px 10px rgba(255,118,117,0.3); }
+        .btn-info { background: #0984e3; box-shadow: 0 4px 10px rgba(9,132,227,0.3); }
+        button:active { transform: scale(0.96); }
+        .footer-text { margin-top: 25px; font-size: 0.75rem; color: #95a5a6; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <button id="btnSend">發送雙專業名片</button>
-        <p class="hint">點擊後將彈出好友清單</p>
+<div class="card">
+    <h2>TED 行動工作站</h2>
+    <div class="btn-group">
+        <button class="btn-card" onclick="sendCard()">📤 發送專業名片</button>
+        <button class="btn-festive" onclick="sendFestive()">🌸 發送溫馨祝福</button>
+        <button class="btn-info" onclick="sendInfo()">📊 分享專業懶人包</button>
     </div>
+    <div class="footer-text">
+        發送時請選擇對象<br>訊息將以 TED 名義無痕送出
+    </div>
+</div>
 
-    <script>
-        // 1. 初始化 LIFF
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId: "2010086405-5iXoP1OW" });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                }
-            } catch (err) {
-                console.error("LIFF 初始化失敗", err);
-            }
-        }
+<script>
+    // 初始化 LIFF
+    async function init() {
+        try {
+            await liff.init({ liffId: "2010086405-5iXoP1OW" });
+            if (!liff.isLoggedIn()) { liff.login(); }
+        } catch (e) { console.error(e); }
+    }
 
-        // 2. 修正後的發送函數
-        async function sendCard() {
-            // 確保已登入
-            if (!liff.isLoggedIn()) {
-                liff.login();
-                return;
-            }
+    // 通用發送函式
+    async function share(payload, altText) {
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        try {
+            const result = await liff.shareTargetPicker([{
+                "type": "flex",
+                "altText": altText,
+                "contents": payload
+            }]);
+            if (result) { console.log("發送成功"); }
+        } catch (e) { console.error("發送取消"); }
+    }
 
-            // 檢查關鍵權限
-            if (liff.isApiAvailable('shareTargetPicker')) {
-                try {
-                    const res = await liff.shareTargetPicker([
-                        {
-                            "type": "flex",
-                            "altText": "TED 向您遞交了數位專業名片",
-                            "contents": {
-                              "type": "carousel",
-                              "contents": [
-                                {
-                                  "type": "bubble",
-                                  "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1000", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
-                                  "body": { "type": "box", "layout": "vertical", "contents": [
-                                      { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" },
-                                      { "type": "text", "text": "專業保險顧問", "size": "md", "color": "#06C755", "margin": "sm", "weight": "bold" },
-                                      { "type": "text", "text": "客觀分析各家方案優缺點，為您建立最穩固的財務防火牆。", "size": "sm", "color": "#666666", "margin": "md", "wrap": true }
-                                  ]},
-                                  "footer": { "type": "box", "layout": "vertical", "contents": [
-                                      { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "uri", "label": "加 LINE 諮詢", "uri": "https://line.me/ti/p/~" } }
-                                  ]}
-                                },
-                                {
-                                  "type": "bubble",
-                                  "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1581094146835-26795493390c?w=1000", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
-                                  "body": { "type": "box", "layout": "vertical", "contents": [
-                                      { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" },
-                                      { "type": "text", "text": "環保工程師", "size": "md", "color": "#4169E1", "margin": "sm", "weight": "bold" },
-                                      { "type": "text", "text": "專精空污防制設備與排放計算，以工程師的嚴謹提供技術支援。", "size": "sm", "color": "#666666", "margin": "md", "wrap": true }
-                                  ]},
-                                  "footer": { "type": "box", "layout": "vertical", "contents": [
-                                      { "type": "button", "style": "primary", "color": "#4169E1", "action": { "type": "uri", "label": "專案需求討論", "uri": "https://line.me/ti/p/~" } }
-                                  ]}
-                                }
-                              ]
-                            }
-                        }
-                    ]);
-                    if (res) {
-                        console.log("發送成功");
-                    }
-                } catch (error) {
-                    alert("發送失敗或取消: " + error.message);
-                }
-            } else {
-                alert("請確認後台 shareTargetPicker 已開啟！");
-            }
-        }
+    // 1. 名片內容 (Carousel)
+    function sendCard() {
+        const payload = {
+          "type": "carousel",
+          "contents": [
+            { "type": "bubble", "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1556742049-13ff7337990c?w=800", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" }, "body": { "type": "box", "layout": "vertical", "contents": [ { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" }, { "type": "text", "text": "專業保險顧問", "size": "md", "color": "#06C755", "weight": "bold" }, { "type": "text", "text": "為您建立最穩固的財務防火牆。", "size": "sm", "color": "#666666", "wrap": true } ] }, "footer": { "type": "box", "layout": "vertical", "contents": [ { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "uri", "label": "加 LINE 諮詢", "uri": "https://line.me/ti/p/~" } } ] } },
+            { "type": "bubble", "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" }, "body": { "type": "box", "layout": "vertical", "contents": [ { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" }, { "type": "text", "text": "環保工程師", "size": "md", "color": "#4169E1", "weight": "bold" }, { "type": "text", "text": "專精空污防制與排放計算技術。", "size": "sm", "color": "#666666", "wrap": true } ] }, "footer": { "type": "box", "layout": "vertical", "contents": [ { "type": "button", "style": "primary", "color": "#4169E1", "action": { "type": "uri", "label": "專案需求討論", "uri": "https://line.me/ti/p/~" } } ] } }
+          ]
+        };
+        share(payload, "TED 向您遞交了數位專業名片");
+    }
 
-        // 綁定按鈕點擊事件
-        document.getElementById('btnSend').addEventListener('click', sendCard);
+    // 2. 溫馨祝福 (單張大圖卡)
+    function sendFestive() {
+        const payload = {
+          "type": "bubble",
+          "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800", "size": "full", "aspectRatio": "1:1", "aspectMode": "cover" },
+          "body": { "type": "box", "layout": "vertical", "contents": [
+              { "type": "text", "text": "最誠摯的祝福", "weight": "bold", "size": "xl", "color": "#ff7675" },
+              { "type": "text", "text": "在這個溫馨的日子，TED 祝您與家人平安喜樂，幸福滿滿。", "size": "md", "color": "#666666", "margin": "md", "wrap": true }
+          ]},
+          "footer": { "type": "box", "layout": "vertical", "contents": [
+              { "type": "text", "text": "— TED 關心您 —", "align": "center", "color": "#aaaaaa", "size": "xs" }
+          ]}
+        };
+        share(payload, "來自 TED 的溫馨祝福");
+    }
 
-        // 執行初始化
-        initializeLiff();
-    </script>
+    // 3. 專業懶人包 (左圖右文列表)
+    function sendInfo() {
+        const payload = {
+          "type": "bubble",
+          "body": { "type": "box", "layout": "vertical", "contents": [
+              { "type": "text", "text": "📊 專業資訊彙整", "weight": "bold", "size": "lg", "color": "#0984e3" },
+              { "type": "separator", "margin": "md" },
+              { "type": "box", "layout": "horizontal", "margin": "md", "contents": [
+                  { "type": "text", "text": "1. 2026 保險節稅重點\n2. 空污法規更新摘要\n3. 個人風險防護檢查", "size": "sm", "color": "#666666", "wrap": true, "flex": 4 }
+              ]},
+              { "type": "button", "action": { "type": "uri", "label": "查看完整資料庫", "uri": "https://line.me/ti/p/~" }, "margin": "md", "style": "secondary" }
+          ]}
+        };
+        share(payload, "TED 分享了專業資訊懶人包");
+    }
+
+    init();
+</script>
+
 </body>
 </html>
