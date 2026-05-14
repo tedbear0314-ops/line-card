@@ -1,134 +1,514 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>TED 專業控制台 | 多選發送版</title>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { color: #2c3e50; text-align: center; font-size: 1.2rem; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .section-title { font-size: 0.9rem; color: #7f8c8d; margin: 20px 0 10px; font-weight: bold; }
-        
-        /* 多選圖庫樣式 */
-        .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        .img-option { border: 4px solid #eee; border-radius: 12px; overflow: hidden; cursor: pointer; transition: 0.2s; position: relative; }
-        .img-option.selected { border-color: #06C755; }
-        .img-option img { width: 100%; height: 110px; object-fit: cover; display: block; }
-        .img-option::after { content: ""; position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: white; border: 2px solid #ddd; border-radius: 50%; display: block; }
-        .img-option.selected::after { content: "✓"; background: #06C755; border-color: #06C755; color: white; text-align: center; line-height: 22px; font-size: 14px; font-weight: bold; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>TED 客戶資訊分享</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+      --line: #06c755;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --border: #d8dde6;
+      --surface: #ffffff;
+      --soft: #f4f7fb;
+      --accent: #2563eb;
+      --warn: #b45309;
+    }
 
-        button { width: 100%; padding: 16px; font-size: 1rem; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-card { background: #34495e; margin-bottom: 15px; }
-        .btn-send-multi { background: #06C755; box-shadow: 0 5px 15px rgba(6,199,85,0.3); }
-        button:active { transform: scale(0.97); }
-        .hint { text-align: center; font-size: 0.8rem; color: #95a5a6; margin-top: 20px; line-height: 1.5; }
-    </style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      color: var(--ink);
+      background: #eef3f8;
+    }
+
+    .app {
+      width: min(960px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 0 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.35;
+    }
+
+    .status {
+      min-width: 88px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 8px 0 16px;
+    }
+
+    .tab {
+      padding: 11px 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      border-color: var(--accent);
+      background: #eaf1ff;
+      color: #1746a2;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 20px rgba(31, 41, 55, 0.08);
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .primary {
+      width: auto;
+      min-width: 132px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--line);
+      color: white;
+      font-size: 0.98rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .secondary {
+      display: inline-flex;
+      width: 100%;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
+      cursor: pointer;
+    }
+
+    .card.selected {
+      border-color: var(--line);
+    }
+
+    .card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #e5e7eb;
+    }
+
+    .card-title {
+      min-height: 48px;
+      padding: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .check {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      color: transparent;
+      font-weight: 900;
+    }
+
+    .selected .check {
+      background: var(--line);
+      color: white;
+    }
+
+    .upload-box {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .warning {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 12px;
+      }
+
+      header {
+        align-items: stretch;
+      }
+
+      h1 {
+        font-size: 1.18rem;
+      }
+
+      .tabs {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .primary {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>客戶 LINE 圖片分享</h1>
+        <p class="note">選好圖片後，LINE 會讓你選擇要分享的客戶或群組。</p>
+      </div>
+      <div class="status" id="status">初始化</div>
+    </header>
 
-<div class="container">
-    <h2>TED 行動工作站</h2>
-    
-    <button class="btn-card" onclick="sendCard()">📤 發送專業身分名片</button>
+    <nav class="tabs" aria-label="圖片分類">
+      <button class="tab active" type="button" data-tab="program">節目卡片</button>
+      <button class="tab" type="button" data-tab="insurance">保險資訊</button>
+      <button class="tab" type="button" data-tab="phone">手機相片</button>
+    </nav>
 
-    <div class="section-title">選擇多張圖片 (最多 12 張)</div>
-    <div class="gallery">
-        <div class="img-option" onclick="toggleSelect(this, 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800', '溫馨祝福')">
-            <img src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300">
-        </div>
-        <div class="img-option" onclick="toggleSelect(this, 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800', '節慶分享')">
-            <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=300">
-        </div>
-        <div class="img-option" onclick="toggleSelect(this, 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=800', '正能量')">
-            <img src="https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=300">
-        </div>
-        <div class="img-option" onclick="toggleSelect(this, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', '海闊天空')">
-            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300">
-        </div>
-    </div>
-    
-    <button class="btn-send-multi" onclick="sendMultiPhotos()">🚀 一鍵發送所選圖片</button>
+    <section class="toolbar">
+      <div class="count" id="selectedCount">已選 0 張</div>
+      <button class="primary" type="button" id="shareButton" disabled>分享到 LINE</button>
+    </section>
 
-    <div class="hint">
-        勾選圖片後按下按鈕即可發送輪播卡片<br>
-        (此功能將以您的名義無痕送出)
-    </div>
-</div>
+    <section class="panel active" id="programPanel">
+      <div class="grid" id="programGrid"></div>
+    </section>
 
-<script>
-    let selectedPhotos = [];
+    <section class="panel" id="insurancePanel">
+      <div class="grid" id="insuranceGrid"></div>
+    </section>
 
-    async function init() {
-        try {
-            await liff.init({ liffId: "2010086405-5iXoP1OW" });
-            if (!liff.isLoggedIn()) { liff.login(); }
-        } catch (e) { console.error(e); }
+    <section class="panel" id="phonePanel">
+      <div class="upload-box">
+        <button class="secondary" type="button" id="githubUploadButton">開啟 GitHub 上傳圖片</button>
+        <p class="note">
+          固定要分享的節目卡片、保險資訊，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
+          上傳後再把圖片檔名寫進頁面的圖片清單。
+        </p>
+        <input id="photoInput" type="file" accept="image/png,image/jpeg" multiple>
+        <p class="note">
+          手機相片必須先上傳到公開 HTTPS 圖片空間，LINE 才能分享。
+          若要啟用這個功能，請在程式裡填入 Cloudinary 的 <span class="warning">cloud name</span> 和 <span class="warning">upload preset</span>。
+        </p>
+      </div>
+      <div class="grid" id="phoneGrid" style="margin-top: 14px;"></div>
+    </section>
+  </main>
+
+  <script>
+    const LIFF_ID = "2010086405-5iXoP1OW";
+
+    // 請改成你的 GitHub images 資料夾上傳頁。
+    // 格式通常是：https://github.com/你的帳號/你的repo/upload/main/images
+    const GITHUB_IMAGES_UPLOAD_URL = "https://github.com/tedbear0314-ops/line-card/upload/main/images";
+
+    // 若要分享手機裡臨時選的照片，請先到 Cloudinary 建立 unsigned upload preset。
+    // GitHub Pages 是靜態網站，不能自己接收圖片上傳。
+    const CLOUDINARY_CLOUD_NAME = "";
+    const CLOUDINARY_UPLOAD_PRESET = "";
+
+    // 把你的圖片放進 GitHub repo 的 images 資料夾，並改成實際檔名。
+    // 發布到 GitHub Pages 後，這些相對路徑會變成公開 HTTPS 圖片網址。
+    const imageGroups = {
+      program: [
+        { id: "program-1", title: "節目卡片 1", url: "images/program-1.jpg" },
+        { id: "program-2", title: "節目卡片 2", url: "images/program-2.jpg" },
+        { id: "program-3", title: "節目卡片 3", url: "images/program-3.jpg" }
+      ],
+      insurance: [
+        { id: "insurance-1", title: "保險資訊 1", url: "images/insurance-1.jpg" },
+        { id: "insurance-2", title: "保險資訊 2", url: "images/insurance-2.jpg" },
+        { id: "insurance-3", title: "保險資訊 3", url: "images/insurance-3.jpg" }
+      ],
+      phone: []
+    };
+
+    const selected = new Map();
+    const statusEl = document.querySelector("#status");
+    const selectedCountEl = document.querySelector("#selectedCount");
+    const shareButton = document.querySelector("#shareButton");
+    const photoInput = document.querySelector("#photoInput");
+    const githubUploadButton = document.querySelector("#githubUploadButton");
+
+    function toAbsoluteUrl(url) {
+      return new URL(url, window.location.href).href;
     }
 
-    // 切換選取狀態
-    function toggleSelect(el, url, title) {
-        const index = selectedPhotos.findIndex(p => p.url === url);
-        if (index > -1) {
-            selectedPhotos.splice(index, 1);
-            el.classList.remove('selected');
-        } else {
-            if (selectedPhotos.length >= 12) {
-                alert("最多只能選擇 12 張圖片喔！");
-                return;
-            }
-            selectedPhotos.push({ url, title });
-            el.classList.add('selected');
+    function updateSelectionUi() {
+      selectedCountEl.textContent = `已選 ${selected.size} 張`;
+      shareButton.disabled = selected.size === 0;
+
+      document.querySelectorAll(".card").forEach(card => {
+        card.classList.toggle("selected", selected.has(card.dataset.id));
+      });
+    }
+
+    function toggleImage(item) {
+      if (selected.has(item.id)) {
+        selected.delete(item.id);
+      } else {
+        selected.set(item.id, item);
+      }
+      updateSelectionUi();
+    }
+
+    function renderGrid(groupName, elementId) {
+      const grid = document.querySelector(elementId);
+      grid.innerHTML = "";
+
+      imageGroups[groupName].forEach(item => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "card";
+        card.dataset.id = item.id;
+        card.innerHTML = `
+          <span class="check">✓</span>
+          <img src="${item.url}" alt="${item.title}" loading="lazy">
+          <span class="card-title">${item.title}</span>
+        `;
+        card.addEventListener("click", () => toggleImage(item));
+        grid.appendChild(card);
+      });
+
+      updateSelectionUi();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.tab === tabName);
+      });
+
+      document.querySelectorAll(".panel").forEach(panel => {
+        panel.classList.remove("active");
+      });
+
+      document.querySelector(`#${tabName}Panel`).classList.add("active");
+    }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
         }
+        statusEl.textContent = "已登入";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "LIFF 錯誤";
+        alert("LIFF 初始化失敗，請確認 LIFF ID 與 Endpoint URL 設定。");
+      }
     }
 
-    // 發送多圖輪播 (Carousel)
-    async function sendMultiPhotos() {
-        if (selectedPhotos.length === 0) {
-            alert("請至少選擇一張圖片！");
-            return;
+    async function uploadToCloudinary(file) {
+      if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+        throw new Error("尚未設定 Cloudinary cloud name 或 upload preset。");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("圖片上傳失敗。");
+      }
+
+      const data = await response.json();
+      return data.secure_url;
+    }
+
+    async function handlePhonePhotos(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      try {
+        statusEl.textContent = "上傳中";
+        for (const file of files) {
+          const url = await uploadToCloudinary(file);
+          imageGroups.phone.push({
+            id: `phone-${crypto.randomUUID()}`,
+            title: file.name,
+            url
+          });
         }
-
-        const bubbles = selectedPhotos.map(photo => ({
-            "type": "bubble",
-            "hero": {
-                "type": "image",
-                "url": photo.url,
-                "size": "full",
-                "aspectRatio": "1:1",
-                "aspectMode": "cover"
-            },
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "contents": [
-                    { "type": "text", "text": photo.title, "weight": "bold", "size": "md" },
-                    { "type": "text", "text": "來自 TED 的分享", "size": "xs", "color": "#aaaaaa", "margin": "xs" }
-                ]
-            }
-        }));
-
-        const payload = { "type": "carousel", "contents": bubbles };
-
-        try {
-            const res = await liff.shareTargetPicker([{
-                "type": "flex",
-                "altText": "TED 傳送了一組精彩圖片給您",
-                "contents": payload
-            }]);
-            if (res) { console.log("Success"); }
-        } catch (e) { console.error(e); }
+        renderGrid("phone", "#phoneGrid");
+        statusEl.textContent = "已登入";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "上傳錯誤";
+        alert(error.message);
+      }
     }
 
-    // 保持原本的名片功能
-    async function sendCard() {
-        // ... (省略原本名片 JSON，維持與之前相同即可)
+    async function shareSelectedImages() {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      const items = Array.from(selected.values());
+      const messageObjects = items.map(item => {
+        const imageUrl = toAbsoluteUrl(item.url);
+        return {
+          type: "image",
+          originalContentUrl: imageUrl,
+          previewImageUrl: imageUrl
+        };
+      });
+
+      try {
+        statusEl.textContent = "分享中";
+        for (let i = 0; i < messageObjects.length; i += 5) {
+          const group = messageObjects.slice(i, i + 5);
+          const result = await liff.shareTargetPicker(group, { isMultiple: true });
+          if (!result) break;
+        }
+        statusEl.textContent = "已登入";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "分享錯誤";
+        alert("分享失敗，請確認 LINE Developers 已啟用 Share target picker。");
+      }
     }
 
-    init();
-</script>
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
 
+    shareButton.addEventListener("click", shareSelectedImages);
+    photoInput.addEventListener("change", handlePhonePhotos);
+    githubUploadButton.addEventListener("click", () => {
+      if (!GITHUB_IMAGES_UPLOAD_URL) {
+        alert("請先在 index.html 裡設定 GITHUB_IMAGES_UPLOAD_URL。");
+        return;
+      }
+
+      window.open(GITHUB_IMAGES_UPLOAD_URL, "_blank", "noopener");
+    });
+
+    renderGrid("program", "#programGrid");
+    renderGrid("insurance", "#insuranceGrid");
+    initLiff();
+  </script>
 </body>
 </html>
