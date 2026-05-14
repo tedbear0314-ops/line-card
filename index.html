@@ -316,6 +316,7 @@
     // 請改成你的 GitHub images 資料夾上傳頁。
     // 格式通常是：https://github.com/你的帳號/你的repo/upload/main/images
     const GITHUB_IMAGES_UPLOAD_URL = "https://github.com/tedbear0314-ops/line-card/upload/main/images";
+    const GITHUB_IMAGES_API_URL = "https://api.github.com/repos/tedbear0314-ops/line-card/contents/images?ref=main";
 
     // 若要分享手機裡臨時選的照片，請先到 Cloudinary 建立 unsigned upload preset。
     // GitHub Pages 是靜態網站，不能自己接收圖片上傳。
@@ -325,16 +326,8 @@
     // 把你的圖片放進 GitHub repo 的 images 資料夾，並改成實際檔名。
     // 發布到 GitHub Pages 後，這些相對路徑會變成公開 HTTPS 圖片網址。
     const imageGroups = {
-      program: [
-        { id: "program-1", title: "節目卡片 1", url: "images/program-1.jpg" },
-        { id: "program-2", title: "節目卡片 2", url: "images/program-2.jpg" },
-        { id: "program-3", title: "節目卡片 3", url: "images/program-3.jpg" }
-      ],
-      insurance: [
-        { id: "insurance-1", title: "保險資訊 1", url: "images/insurance-1.jpg" },
-        { id: "insurance-2", title: "保險資訊 2", url: "images/insurance-2.jpg" },
-        { id: "insurance-3", title: "保險資訊 3", url: "images/insurance-3.jpg" }
-      ],
+      program: [],
+      insurance: [],
       phone: []
     };
 
@@ -371,6 +364,15 @@
       const grid = document.querySelector(elementId);
       grid.innerHTML = "";
 
+      if (imageGroups[groupName].length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "note";
+        empty.textContent = "目前還沒有圖片。請先到 GitHub 的 images 資料夾上傳圖片。";
+        grid.appendChild(empty);
+        updateSelectionUi();
+        return;
+      }
+
       imageGroups[groupName].forEach(item => {
         const card = document.createElement("button");
         card.type = "button";
@@ -386,6 +388,52 @@
       });
 
       updateSelectionUi();
+    }
+
+    function getDisplayTitle(fileName) {
+      return decodeURIComponent(fileName)
+        .replace(/\.(jpg|jpeg|png|webp)$/i, "")
+        .replace(/[-_]+/g, " ");
+    }
+
+    function getImageCategory(fileName) {
+      const lowerName = fileName.toLowerCase();
+      if (lowerName.includes("insurance") || lowerName.includes("保險")) {
+        return "insurance";
+      }
+      return "program";
+    }
+
+    async function loadGithubImages() {
+      try {
+        statusEl.textContent = "讀取圖片";
+        const response = await fetch(GITHUB_IMAGES_API_URL);
+        if (!response.ok) throw new Error("讀不到 GitHub images 資料夾。");
+
+        const files = await response.json();
+        imageGroups.program = [];
+        imageGroups.insurance = [];
+
+        files
+          .filter(file => file.type === "file" && /\.(jpg|jpeg|png|webp)$/i.test(file.name))
+          .forEach(file => {
+            const category = getImageCategory(file.name);
+            imageGroups[category].push({
+              id: `${category}-${file.sha}`,
+              title: getDisplayTitle(file.name),
+              url: file.download_url
+            });
+          });
+
+        renderGrid("program", "#programGrid");
+        renderGrid("insurance", "#insuranceGrid");
+        statusEl.textContent = liff.isLoggedIn() ? "已登入" : "未登入";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "圖片錯誤";
+        renderGrid("program", "#programGrid");
+        renderGrid("insurance", "#insuranceGrid");
+      }
     }
 
     function switchTab(tabName) {
@@ -508,7 +556,7 @@
 
     renderGrid("program", "#programGrid");
     renderGrid("insurance", "#insuranceGrid");
-    initLiff();
+    initLiff().then(loadGithubImages);
   </script>
 </body>
 </html>
