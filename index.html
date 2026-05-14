@@ -509,6 +509,7 @@
             const aspectRatio = await getImageAspectRatio(file.download_url);
             imageGroups[category].push({
               id: `${category}-${file.sha}`,
+              category,
               fileName: file.name,
               url: file.download_url,
               linkUrl: imageLinks[file.name] || "",
@@ -619,7 +620,7 @@
         url: imageUrl,
         size: "full",
         aspectRatio: item.aspectRatio || "20:13",
-        aspectMode: "fit",
+        aspectMode: item.category === "news" ? "cover" : "fit",
         backgroundColor: "#FFFFFF"
       };
 
