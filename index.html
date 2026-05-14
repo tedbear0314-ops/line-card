@@ -428,6 +428,24 @@
       return "program";
     }
 
+    function gcd(a, b) {
+      return b === 0 ? a : gcd(b, a % b);
+    }
+
+    function getImageAspectRatio(url) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const width = img.naturalWidth || 20;
+          const height = img.naturalHeight || 13;
+          const divisor = gcd(width, height);
+          resolve(`${Math.round(width / divisor)}:${Math.round(height / divisor)}`);
+        };
+        img.onerror = () => resolve("20:13");
+        img.src = url;
+      });
+    }
+
     async function loadGithubImages() {
       try {
         statusEl.textContent = "讀取圖片";
@@ -438,16 +456,20 @@
         imageGroups.program = [];
         imageGroups.insurance = [];
 
-        files
+        const imageFiles = files
           .filter(file => file.type === "file" && /\.(jpg|jpeg|png|webp)$/i.test(file.name))
-          .forEach(file => {
+          .map(async file => {
             const category = getImageCategory(file.name);
+            const aspectRatio = await getImageAspectRatio(file.download_url);
             imageGroups[category].push({
               id: `${category}-${file.sha}`,
               title: getDisplayTitle(file.name),
-              url: file.download_url
+              url: file.download_url,
+              aspectRatio
             });
           });
+
+        await Promise.all(imageFiles);
 
         renderGrid("program", "#programGrid");
         renderGrid("insurance", "#insuranceGrid");
@@ -540,8 +562,9 @@
           type: "image",
           url: imageUrl,
           size: "full",
-          aspectRatio: "20:13",
-          aspectMode: "cover",
+          aspectRatio: item.aspectRatio || "20:13",
+          aspectMode: "fit",
+          backgroundColor: "#FFFFFF",
           action: {
             type: "uri",
             uri: imageUrl
