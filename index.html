@@ -155,39 +155,20 @@
     }
 
     .grid {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 4px 2px 14px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .grid::-webkit-scrollbar {
-      height: 8px;
-    }
-
-    .grid::-webkit-scrollbar-track {
-      background: #dbe3ec;
-      border-radius: 999px;
-    }
-
-    .grid::-webkit-scrollbar-thumb {
-      background: #94a3b8;
-      border-radius: 999px;
+      padding: 4px 2px 20px;
     }
 
     .card {
       position: relative;
-      flex: 0 0 clamp(260px, 31vw, 380px);
       overflow: hidden;
       border: 2px solid transparent;
       border-radius: 8px;
       background: var(--surface);
       box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
       cursor: pointer;
-      scroll-snap-align: start;
     }
 
     .card.selected {
@@ -284,7 +265,11 @@
       }
 
       .card {
-        flex-basis: 82vw;
+        width: 100%;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
