@@ -63,7 +63,7 @@
 
     .tabs {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin: 8px 0 16px;
     }
@@ -300,10 +300,8 @@
     </header>
 
     <nav class="tabs" aria-label="圖片分類">
-      <button class="tab active" type="button" data-tab="program">節目卡片</button>
-      <button class="tab" type="button" data-tab="insurance">保險資訊</button>
-      <button class="tab" type="button" data-tab="finance">財經資訊</button>
-      <button class="tab" type="button" data-tab="news">新聞分享</button>
+      <button class="tab active" type="button" data-tab="program">節日定聯</button>
+      <button class="tab" type="button" data-tab="info">資訊分享</button>
       <button class="tab" type="button" data-tab="phone">手機相片</button>
     </nav>
 
@@ -316,23 +314,15 @@
       <div class="grid" id="programGrid"></div>
     </section>
 
-    <section class="panel" id="insurancePanel">
-      <div class="grid" id="insuranceGrid"></div>
-    </section>
-
-    <section class="panel" id="financePanel">
-      <div class="grid" id="financeGrid"></div>
-    </section>
-
-    <section class="panel" id="newsPanel">
-      <div class="grid" id="newsGrid"></div>
+    <section class="panel" id="infoPanel">
+      <div class="grid" id="infoGrid"></div>
     </section>
 
     <section class="panel" id="phonePanel">
       <div class="upload-box">
         <button class="secondary" type="button" id="githubUploadButton">開啟 GitHub 上傳圖片</button>
         <p class="note">
-          固定要分享的節目卡片、保險資訊、財經資訊、新聞分享，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
+          固定要分享的節日圖片、新聞、保險、財經資訊，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
           上傳後重新整理頁面，就會自動讀取圖片。若圖片要連到文章或商品頁，請編輯 <span class="warning">image-links.json</span>。
         </p>
         <input id="photoInput" type="file" accept="image/png,image/jpeg" multiple>
@@ -362,17 +352,13 @@
 
     const imageGroups = {
       program: [],
-      insurance: [],
-      finance: [],
-      news: [],
+      info: [],
       phone: []
     };
 
     const emptyMessages = {
-      program: "目前還沒有圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
-      insurance: "目前還沒有圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
-      finance: "目前還沒有財經資訊圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
-      news: "目前還沒有新聞分享圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
+      program: "目前還沒有節日圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
+      info: "目前還沒有資訊分享圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
       phone: "目前還沒有手機相片。請先選擇手機裡的圖片。"
     };
 
@@ -449,14 +435,15 @@
 
     function getImageCategory(fileName) {
       const lowerName = fileName.toLowerCase();
-      if (lowerName.includes("insurance") || lowerName.includes("保險")) {
-        return "insurance";
-      }
-      if (lowerName.includes("finance") || lowerName.includes("財經")) {
-        return "finance";
-      }
-      if (lowerName.includes("news") || lowerName.includes("新聞")) {
-        return "news";
+      if (
+        lowerName.includes("insurance") ||
+        lowerName.includes("finance") ||
+        lowerName.includes("news") ||
+        lowerName.includes("保險") ||
+        lowerName.includes("財經") ||
+        lowerName.includes("新聞")
+      ) {
+        return "info";
       }
       return "program";
     }
@@ -498,9 +485,7 @@
 
         const files = await response.json();
         imageGroups.program = [];
-        imageGroups.insurance = [];
-        imageGroups.finance = [];
-        imageGroups.news = [];
+        imageGroups.info = [];
 
         const imageFiles = files
           .filter(file => file.type === "file" && /\.(jpg|jpeg|png|webp)$/i.test(file.name))
@@ -520,17 +505,13 @@
         await Promise.all(imageFiles);
 
         renderGrid("program", "#programGrid");
-        renderGrid("insurance", "#insuranceGrid");
-        renderGrid("finance", "#financeGrid");
-        renderGrid("news", "#newsGrid");
+        renderGrid("info", "#infoGrid");
         statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "圖片錯誤";
         renderGrid("program", "#programGrid");
-        renderGrid("insurance", "#insuranceGrid");
-        renderGrid("finance", "#financeGrid");
-        renderGrid("news", "#newsGrid");
+        renderGrid("info", "#infoGrid");
       }
     }
 
@@ -702,9 +683,7 @@
     });
 
     renderGrid("program", "#programGrid");
-    renderGrid("insurance", "#insuranceGrid");
-    renderGrid("finance", "#financeGrid");
-    renderGrid("news", "#newsGrid");
+    renderGrid("info", "#infoGrid");
     loadImageLinks().then(loadGithubImages);
     initLiff();
   </script>
