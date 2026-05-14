@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>TED 雙專業發送器</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 280px; }
+        button { width: 100%; padding: 16px; font-size: 18px; font-weight: bold; background-color: #06C755; color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(6,199,85,0.3); }
+        .hint { margin-top: 20px; font-size: 13px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <button id="btnSend">發送雙專業名片</button>
+        <p class="hint">點擊後將彈出好友清單</p>
+    </div>
+
+    <script>
+        // 1. 初始化 LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: "2010086405-5iXoP1OW" });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            } catch (err) {
+                console.error("LIFF 初始化失敗", err);
+            }
+        }
+
+        // 2. 修正後的發送函數
+        async function sendCard() {
+            // 確保已登入
+            if (!liff.isLoggedIn()) {
+                liff.login();
+                return;
+            }
+
+            // 檢查關鍵權限
+            if (liff.isApiAvailable('shareTargetPicker')) {
+                try {
+                    const res = await liff.shareTargetPicker([
+                        {
+                            "type": "flex",
+                            "altText": "TED 向您遞交了數位專業名片",
+                            "contents": {
+                              "type": "carousel",
+                              "contents": [
+                                {
+                                  "type": "bubble",
+                                  "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1000", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
+                                  "body": { "type": "box", "layout": "vertical", "contents": [
+                                      { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" },
+                                      { "type": "text", "text": "專業保險顧問", "size": "md", "color": "#06C755", "margin": "sm", "weight": "bold" },
+                                      { "type": "text", "text": "客觀分析各家方案優缺點，為您建立最穩固的財務防火牆。", "size": "sm", "color": "#666666", "margin": "md", "wrap": true }
+                                  ]},
+                                  "footer": { "type": "box", "layout": "vertical", "contents": [
+                                      { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "uri", "label": "加 LINE 諮詢", "uri": "https://line.me/ti/p/~" } }
+                                  ]}
+                                },
+                                {
+                                  "type": "bubble",
+                                  "hero": { "type": "image", "url": "https://images.unsplash.com/photo-1581094146835-26795493390c?w=1000", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
+                                  "body": { "type": "box", "layout": "vertical", "contents": [
+                                      { "type": "text", "text": "TED 劉人豪", "weight": "bold", "size": "xl" },
+                                      { "type": "text", "text": "環保工程師", "size": "md", "color": "#4169E1", "margin": "sm", "weight": "bold" },
+                                      { "type": "text", "text": "專精空污防制設備與排放計算，以工程師的嚴謹提供技術支援。", "size": "sm", "color": "#666666", "margin": "md", "wrap": true }
+                                  ]},
+                                  "footer": { "type": "box", "layout": "vertical", "contents": [
+                                      { "type": "button", "style": "primary", "color": "#4169E1", "action": { "type": "uri", "label": "專案需求討論", "uri": "https://line.me/ti/p/~" } }
+                                  ]}
+                                }
+                              ]
+                            }
+                        }
+                    ]);
+                    if (res) {
+                        console.log("發送成功");
+                    }
+                } catch (error) {
+                    alert("發送失敗或取消: " + error.message);
+                }
+            } else {
+                alert("請確認後台 shareTargetPicker 已開啟！");
+            }
+        }
+
+        // 綁定按鈕點擊事件
+        document.getElementById('btnSend').addEventListener('click', sendCard);
+
+        // 執行初始化
+        initializeLiff();
+    </script>
+</body>
+</html>
