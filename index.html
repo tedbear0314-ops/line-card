@@ -63,7 +63,7 @@
 
     .tabs {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin: 8px 0 16px;
     }
@@ -302,6 +302,7 @@
     <nav class="tabs" aria-label="圖片分類">
       <button class="tab active" type="button" data-tab="program">節目卡片</button>
       <button class="tab" type="button" data-tab="insurance">保險資訊</button>
+      <button class="tab" type="button" data-tab="finance">財經資訊</button>
       <button class="tab" type="button" data-tab="phone">手機相片</button>
     </nav>
 
@@ -318,11 +319,15 @@
       <div class="grid" id="insuranceGrid"></div>
     </section>
 
+    <section class="panel" id="financePanel">
+      <div class="grid" id="financeGrid"></div>
+    </section>
+
     <section class="panel" id="phonePanel">
       <div class="upload-box">
         <button class="secondary" type="button" id="githubUploadButton">開啟 GitHub 上傳圖片</button>
         <p class="note">
-          固定要分享的節目卡片、保險資訊，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
+          固定要分享的節目卡片、保險資訊、財經資訊，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
           上傳後重新整理頁面，就會自動讀取圖片。
         </p>
         <input id="photoInput" type="file" accept="image/png,image/jpeg" multiple>
@@ -352,12 +357,14 @@
     const imageGroups = {
       program: [],
       insurance: [],
+      finance: [],
       phone: []
     };
 
     const emptyMessages = {
       program: "目前還沒有圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
       insurance: "目前還沒有圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
+      finance: "目前還沒有財經資訊圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
       phone: "目前還沒有手機相片。請先選擇手機裡的圖片。"
     };
 
@@ -436,6 +443,9 @@
       if (lowerName.includes("insurance") || lowerName.includes("保險")) {
         return "insurance";
       }
+      if (lowerName.includes("finance") || lowerName.includes("財經")) {
+        return "finance";
+      }
       return "program";
     }
 
@@ -466,6 +476,7 @@
         const files = await response.json();
         imageGroups.program = [];
         imageGroups.insurance = [];
+        imageGroups.finance = [];
 
         const imageFiles = files
           .filter(file => file.type === "file" && /\.(jpg|jpeg|png|webp)$/i.test(file.name))
@@ -483,12 +494,14 @@
 
         renderGrid("program", "#programGrid");
         renderGrid("insurance", "#insuranceGrid");
+        renderGrid("finance", "#financeGrid");
         statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "圖片錯誤";
         renderGrid("program", "#programGrid");
         renderGrid("insurance", "#insuranceGrid");
+        renderGrid("finance", "#financeGrid");
       }
     }
 
@@ -651,6 +664,7 @@
 
     renderGrid("program", "#programGrid");
     renderGrid("insurance", "#insuranceGrid");
+    renderGrid("finance", "#financeGrid");
     loadGithubImages();
     initLiff();
   </script>
